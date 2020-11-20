@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Homework4</title>
+</head>
+<body style="text-align: center">
+<br>
+<br>
+<br>
+<br>
+    <h4>Enter URL for list of tallest buildings JSON File</h4>
+    <p id ="ur"></p>
+    <form>
+        <input type="text" id="input_url" name="input_url">
+        <br>
+        <br>
+        <input type="button" value="Submit Query" onclick="showList(input_url)">
+    </form>
+</body>
+<script type="text/javascript">
+
+    var jsonDoc;
+    function showList(url) {
+        var input_url = url.value;
+        if(input_url==""){
+            alert("url is empty!");
+        }else {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.status == 0 && xmlhttp.readyState==4) {
+                    alert(input_url+" doesn't exist!");
+                }
+            }
+            xmlhttp.open("GET", input_url, false);
+            xmlhttp.send();
+            jsonDoc = xmlhttp.responseText;
+            if(jsonDoc.search("404 Not Found")!=-1){
+                alert(input_url+" doesn't exist!");
+            }else {
+                var data= JSON.parse(jsonDoc);
+                var list="<!DOCTYPE html><HTML><head><title>Largest Manufactures</title>";
+                list+="<style>table, th, td {border: 1px solid black;} " +
+                    "th { height: 5px} " +
+                    "td{height: 180px} li:first-child{ font-weight: bold;}" +
+                    "img{height: 180px; width: 150px; display: block}</style>";
+                list+="</head><body><table>";
+
+                if('Row' in data.Mainline.Table){
+                    list+="<tr>";
+                    list+="<th width='5px'>";
+                    list+=data.Mainline.Table.Header.Data[0];
+                    list+="</th>";
+
+                    list+="<th width='100px'>";
+                    list+=data.Mainline.Table.Header.Data[1];
+                    list+="</th>";
+
+                    list+="<th  width='430px'>";
+                    list+=data.Mainline.Table.Header.Data[2];
+                    list+="</th>";
+
+                    list+="<th  width='20px'>";
+                    list+=data.Mainline.Table.Header.Data[3];
+                    list+="</th>";
+
+                    list+="<th  width='260px'>";
+                    list+=data.Mainline.Table.Header.Data[4];
+                    list+="</th>";
+
+                    list+="<th width='150px'>";
+                    list+=data.Mainline.Table.Header.Data[5];
+                    list+="</th>";
+                    list+="</tr>";
+                    var row;
+                    for(row in data.Mainline.Table.Row) {
+                        list += "<tr>";
+                        list += "<td>";
+                        list += data.Mainline.Table.Row[row].Rank;
+                        list += "</td>";
+                        list += "<td>";
+                        list += data.Mainline.Table.Row[row].Name;
+                        list += "</td>";
+                        list += "<td>";
+                        list += "<ul>";
+                        for (j = 0; j < data.Mainline.Table.Row[row].Hubs.Hub.length; j++) {
+                            list += "<li>";
+                            list += data.Mainline.Table.Row[row].Hubs.Hub[j];
+                            list += "</li>";
+                        }
+                        list += "</ul>";
+                        list += "</td>";
+
+                        list += "<td>";
+                        list += data.Mainline.Table.Row[row].Height;
+                        list += "</td>";
+
+                        list += "<td><a href='";
+                        list += data.Mainline.Table.Row[row].HomePage;
+                        list += "'>" + data.Mainline.Table.Row[row].HomePage +
+                            "</a></td>";
+
+                        list += "<td><img src='";
+                        list += data.Mainline.Table.Row[row].Logo;
+                        list += "' alt=''></td>";
+                        list+="</tr>";
+                    }
+
+                    list+="</table></bo";
+                    list+="dy></html>";
+                    hwin= window.open("","list" ,"height=600,width=1100");
+                    hwin.document.write(list);
+                }else {
+                    alert("No Building in the list!")
+                }
+            }
+
+
+        }
+        }
+
+
+
+
+</script>
+</html>

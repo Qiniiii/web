@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Homework6</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- Load d3.js -->
+    <script src="https://d3js.org/d3.v4.js"></script>
+
+<!-- Load d3-cloud -->
+    <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3.layout.cloud.js"></script>
+
+<!-- Create a div where the graph will take place -->
+<div id="my_dataviz"></div>
+</head>
+<body>
+
+
+    <ul class="nav">
+        <li><a id="home" class="active" onclick="show()">Google News</a></li>
+        <li><a id="search" onclick="showSearch()">Search</a></li>
+    </ul>
+
+    <div id="show">
+        <div class="main">
+            <ul class="top">
+                <li id="head">
+
+                </li>
+                <li id="word">
+
+                </li>
+            </ul>
+            <div class="news"><h2>CNN</h2>
+                <hr>
+                <br>
+                <ul id="cnn" class="newsbox">
+
+                </ul>
+            </div>
+            <div class="news"><h2>Fox News</h2>
+                <hr>
+                <br>
+                <ul id="fox-news"class="newsbox">
+
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+<script type="text/javascript">
+    var myIndex = 0;
+    var myWord;
+    showSlides();
+    rollslides();
+    wordCloud();
+    shownews('fox-news');
+    shownews('cnn');
+
+
+    function rollslides() {
+        var i;
+        var x = document.getElementsByClassName("slides");
+        for (i = 0; i < x.length; i++) {
+            x[i].style.display = "none";
+        }
+        myIndex++;
+        if (myIndex > x.length) {
+            myIndex = 1
+        }
+        x[myIndex - 1].style.display = "block";
+        setTimeout(rollslides, 2000); // Change image every 2 seconds
+    }
+
+    function show(){
+            newpage='<div class="main">\n' +
+                '            <ul class="top">\n' +
+                '                <li id="head">\n' +
+                '\n' +
+                '                </li>\n' +
+                '                <li id="word">\n' +
+                '\n' +
+                '                </li>\n' +
+                '            </ul>\n' +
+                '            <div class="news"><h2>CNN</h2>\n' +
+                '                <hr>\n' +
+                '                <br>\n' +
+                '                <ul id="cnn" class="newsbox">\n' +
+                '\n' +
+                '                </ul>\n' +
+                '            </div>\n' +
+                '            <div class="news"><h2>Fox News</h2>\n' +
+                '                <hr>\n' +
+                '                <br>\n' +
+                '                <ul id="fox-news"class="newsbox">\n' +
+                '  \n' +
+                '                </ul>\n' +
+                '            </div>\n' +
+                '        </div>';
+            document.getElementById('home').className='active';
+            document.getElementById('search').className='';
+            document.getElementById('show').innerHTML=newpage;
+            showSlides();
+            rollslides();
+            wordCloud();
+            shownews('fox-news');
+            shownews('cnn');
+        }
+
+    function showSearch() {
+            var newSearch='<div class="main">\n' +
+                '        <form name="mysearch" onsubmit="return false">\n' +
+                '            <label for="keyword">Keyword<span style="color: red">*</span></label>\n' +
+                '            <input type="text" name="keyword" id="keyword" required>\n' +
+                '            <label for="from">From<span style="color: red">*</span></label>\n' +
+                '            <input type="date"  name="from" id="from" value="2020-03-08" required>\n' +
+                '            <label for="to">To<span style="color: red">*</span></label>\n' +
+                '            <input type="date"  name="to" id="to" value="2020-03-13"required>\n' +
+                '            <br>\n' +
+                '            <br>\n' +
+                '            <label for="category">Category</label>\n' +
+                '            <select onchange="showSources()" name="category" id="category">\n' +
+                '                <option value="all" selected>all</option>\n' +
+                '                <option value="business">Business</option>\n' +
+                '                <option value="entertainment">Entertainment</option>\n' +
+                '                <option value="general">General</option>\n' +
+                '                <option value="health">Health</option>\n' +
+                '                <option value="science">Science</option>\n' +
+                '                <option value="sports">Sports</option>\n' +
+                '                <option value="technology">Technology</option>\n' +
+                '            </select>\n' +
+                '            <label for="source">Source</label>\n' +
+                '            <select name="source" id="source">\n' +
+                '                <option value="all" selected>all</option>\n' +
+                '            </select>\n' +
+                '            <br>\n' +
+                '            <br>\n' +
+                '            <input class="but" type="submit" value="Search" onclick="doSearch()">\n' +
+                '            <input class="but" type="reset" value="Clear" onclick="clearRes()">\n' +
+                '        </form>' +
+                '       <div id="result"></div>\n' +
+                '    </div>';
+            document.getElementById('search').className='active';
+            document.getElementById('home').className='';
+            document.getElementById('show').innerHTML=newSearch;
+        }
+
+    function clearRes() {
+        document.getElementById("result").innerHTML="";
+    }
+    function shownews(source) {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open('get', '/headlines?sources='+source, false);//
+        xmlhttp.send();
+        var res = xmlhttp.responseText;
+        var data = JSON.parse(res);
+        if ('articles' in data) {
+            var slides = '';
+            var i = 0;
+            for (var art in data.articles) {
+                if (i < 4) {
+                    slides +=
+                        '<li><a href="' +data.articles[art].url +
+                        '" target="_blank">' +
+                        '<img src="' + data.articles[art].urlToImage +
+                        '" alt="">' +
+                        '<div class="content"><h4>' + data.articles[art].title +
+                        '</h4>' +
+                        '<p>' +  data.articles[art].description+
+                        '</p></div>' +
+                        '</a></li>';
+                    i = i + 1;
+                }
+            }
+            document.getElementById(source).innerHTML = slides;
+        } else {
+            document.getElementById(source).innerHTML = data;
+
+        }
+    }
+    function showSlides() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open('get', '/headlines',false);
+        xmlhttp.send();
+        var res = xmlhttp.responseText;
+        var data = JSON.parse(res);
+        myWord=data.words;
+        if ('articles' in data) {
+            var slides='';
+            var i=0;
+            for (var art in data.articles) {
+                if (i<5){
+                    slides +=
+                        '<a class="slides" href="' + data.articles[art].url +
+                        '" target="_blank">' +
+                        '<img src="' + data.articles[art].urlToImage +
+                        '" alt="">' +
+                        '<div class="text-block"><h3>' +data.articles[art].title+
+                        '</h3><p>' +data.articles[art].description+
+                        '</p></div>'+
+                        '</a>';
+                    i=i+1;
+                }
+            }
+            document.getElementById('head').innerHTML = slides;
+        } else {
+            document.getElementById('head').innerHTML = data;
+
+        }
+    }
+    function showSources() {
+            category=document.getElementById('category').value;
+
+            if (category !="all"){
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.open('get', '/sources?category='+category, false);//
+                xmlhttp.send();
+                var res = xmlhttp.responseText;
+                var data = JSON.parse(res);
+                document.getElementById('source').innerHTML='<option value="all" selected>all</option>\n';
+                for (var i in data.sources){
+                    var opt=document.createElement("option");
+                    opt.value=data.sources[i].id;
+                    opt.text=data.sources[i].name;
+                    document.getElementById('source').append(opt);
+                }
+            }
+
+    }
+    function doSearch() {
+        var key=document.getElementById('keyword').value;
+        var from=document.getElementById('from').value;
+        var to=document.getElementById('to').value;
+        var category=document.getElementById('category').value;
+        var source=document.getElementById('source').value;
+
+        if (from > to){
+            alert("incorrect time");
+        }else if(key && source != 'all'){
+                console.log(key);
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.open('get', '/allnews?q='+key+
+                    '&sources='+source+'&from='+from+'&to='+to, false);//
+                xmlhttp.send();
+                var res = xmlhttp.responseText;
+                var data = JSON.parse(res);
+
+        }else {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.open('get', '/allnews?q='+key+
+                    '&from='+from+'&to='+to, false);//
+                xmlhttp.send();
+                var res = xmlhttp.responseText;
+                var data = JSON.parse(res);
+        }
+
+        if ('code' in data && data.code!='parametersMissing'){
+            alert(data.message);
+        }else if('code' in data && data.code=='parametersMissing'){
+
+        }
+        else{
+            var result='';
+            if (data.articles.length>5){
+                for (var c=0;c<5 ;c++){
+                    console.log('nimab');
+                var d=data.articles[c].publishedAt.slice(0, 10).split('-');
+                var Date=d[1] +'/'+ d[2] +'/'+ d[0];
+
+                result+='<table class="searchbox" id="' +c+
+                    '" onclick="showDetails(this)">\n' +
+                '                <tr>\n' +
+                '                <td><img src="' +data.articles[c].urlToImage +
+                    '" alt=""></td>\n' +
+                '                <td>\n' +
+                '                <h2>' +data.articles[c].title+
+                    '</h2>\n' +
+                ' <p class="detail"><b>Author:&nbsp;</b>' +data.articles[c].author+
+                    '</p>  ' +
+                ' <p class="detail" ><b>Source:&nbsp;</b>' +data.articles[c].source.name+
+                    '</p>  ' +
+                ' <p class="detail" ><b>Date:&nbsp;</b>' +Date+
+                    '</p>  ' +
+                '<div class="oneline">' +data.articles[c].description+
+                    '</div>\n <a class="detail" target="_blank" href="' +data.articles[c].url+
+                    '">See Original Post</a>' +
+                '                </td>\n<td>' +
+                    '<div class="closebut" onclick="hideD(this.parentNode.parentNode.parentNode.parentNode)">X</div>'+
+                '                </td></tr>\n' +
+                '            </table>';
+            }
+                for (var c=5;c<10&&c<data.articles.length;c++){
+                var d=data.articles[c].publishedAt.slice(0, 10).split('-');
+                var Date=d[1] +'/'+ d[2] +'/'+ d[0];
+
+                result+='<table class="searchbox" style="display: none" id="' +c+
+                    '" onclick="showDetails(this)">\n' +
+                '                <tr>\n' +
+                '                <td><img src="' +data.articles[c].urlToImage +
+                    '" alt=""></td>\n' +
+                '                <td>\n' +
+                '                <h2>' +data.articles[c].title+
+                    '</h2>\n' +
+                ' <p class="detail"><b>Author:&nbsp;</b>' +data.articles[c].author+
+                    '</p>  ' +
+                ' <p class="detail" ><b>Source:&nbsp;</b>' +data.articles[c].source.name+
+                    '</p>  ' +
+                ' <p class="detail" ><b>Date:&nbsp;</b>' +Date+
+                    '</p>  ' +
+                '<div class="oneline">' +data.articles[c].description+
+                    '</div>\n <a class="detail" target="_blank" href="' +data.articles[c].url+
+                    '">See Original Post</a>' +
+                '                </td>\n<td>' +
+                    '<div class="closebut" onclick="hideD(this.parentNode.parentNode.parentNode.parentNode)">X</div>'+
+                '                </td></tr>\n' +
+                '            </table>';
+            }
+                result+='<input class="showmore but" id="showBut" type="button" value="Show More" onclick="showmore()">\n';
+
+            }else {
+                for (var c=0;c<data.articles.length ;c++){
+                var d=data.articles[c].publishedAt.slice(0, 10).split('-');
+                var Date=d[1] +'/'+ d[2] +'/'+ d[0];
+
+                result+='<table class="searchbox" id="' +c+
+                    '" onclick="showDetails(this)">\n' +
+                '                <tr>\n' +
+                '                <td><img src="' +data.articles[c].urlToImage +
+                    '" alt=""></td>\n' +
+                '                <td>\n' +
+                '                <h2>' +data.articles[c].title+
+                    '</h2>\n' +
+                ' <p class="detail"><b>Author:&nbsp;</b>' +data.articles[c].author+
+                    '</p>  ' +
+                ' <p class="detail" ><b>Source:&nbsp;</b>' +data.articles[c].source.name+
+                    '</p>  ' +
+                ' <p class="detail" ><b>Date:&nbsp;</b>' +Date+
+                    '</p>  ' +
+                '<div class="oneline">' +data.articles[c].description+
+                    '</div>\n <a class="detail" target="_blank" href="' +data.articles[c].url+
+                    '">See Original Post</a>' +
+                '                </td>\n<td>' +
+                    '<div class="closebut" onclick="hideD(this.parentNode.parentNode.parentNode.parentNode)">X</div>'+
+                '                </td></tr>\n' +
+                '            </table>';
+            }
+            }
+            document.getElementById("result").innerHTML=result;
+        }
+
+    }
+
+function showmore() {
+
+    if (document.getElementById("showBut").value=='Show Less'){
+        document.getElementById("showBut").value='Show More';
+        for (var x=5; x<10; x++){
+            document.getElementById(x).style.display="None"
+        }
+    }else {
+        document.getElementById("showBut").value='Show Less';
+        for (var x=5; x<10; x++){
+            document.getElementById(x).style.display=""
+        }
+    }
+}
+function showDetails(table) {
+        var detail=table.getElementsByClassName("detail");
+        for (var i =0;i<4;i++){
+            detail[i].style.display="block";
+        }
+        table.getElementsByClassName("oneline")[0].className="multiLine";
+        table.getElementsByClassName("closebut")[0].style.display="block";
+
+}
+
+function hideD(c) {
+
+        var detail=c.innerHTML.replace(/display: block;/g,"").replace("multiLine","oneline");
+        c.innerHTML=detail;
+        event.stopPropagation();
+
+    }
+
+
+function wordCloud() {
+    // List of words
+    document.getElementById('word').innerHTML='<div id="cloud"></div>';
+
+// set the dimensions and margins of the graph
+var margin = {top: 0, right: 0, bottom: 0, left: 0},
+    width = 300 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("#cloud").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+// Constructs a new cloud layout instance. It run an algorithm to find the position of words that suits your requirements
+// Wordcloud features that are different from one word to the other must be here
+var layout = d3.layout.cloud()
+  .size([width, height])
+  .words(myWord.map(function(d) { return {text: d.word, size:d.size}; }))
+  .padding(10)        //space between words
+  .rotate(function() { return ~~(Math.random() * 2) * 90; })
+  .fontSize(function(d) { return d.size *8; })      // font size of words
+  .on("end", draw);
+layout.start();
+
+// This function takes the output of 'layout' above and draw the words
+// Wordcloud features that are THE SAME from one word to the other can be here
+function draw(words) {
+  svg
+    .append("g")
+      .attr("transform", "translate(" + layout.size()[0]/2  + "," + layout.size()[1]/2  + ")")
+      .selectAll("text")
+        .data(words)
+      .enter().append("text")
+        .style("font-size", function(d) { return d.size +'px' ; })
+        .style("fill", "black")
+        .attr("text-anchor", "middle")
+        .style("font-family", "Impact")
+        .attr("transform", function(d) {
+          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .text(function(d) { return d.text; });
+}
+
+}
+
+</script>
+
+</html>
